@@ -1,0 +1,345 @@
+---
+name: risingwave-streaming
+networks:
+  redpanda_network:
+    driver: bridge
+services:
+  risingwave-0:
+    image: "risingwavelabs/risingwave:latest"
+    command: "standalone --meta-opts=\" \
+                    --listen-addr 0.0.0.0:5690 \
+                    --advertise-addr 0.0.0.0:5690 \
+                    --dashboard-host 0.0.0.0:5691 \
+                    --prometheus-host 0.0.0.0:1250 \
+                    --prometheus-endpoint http://prometheus-0:9500 \
+                    --backend sql \
+                    --sql-endpoint postgres://postgres:@postgres-0:5432/metadata \
+                    --state-store hummock+minio://hummockadmin:hummockadmin@minio-0:9301/hummock001 \
+                    --data-directory hummock_001 \
+                    --config-path /risingwave.toml\" \
+                 --compute-opts=\" \
+                    --config-path /risingwave.toml \
+                    --listen-addr 0.0.0.0:5688 \
+                    --prometheus-listener-addr 0.0.0.0:1250 \
+                    --advertise-addr 0.0.0.0:5688 \
+                    --async-stack-trace verbose \
+                    #--parallelism 4 \
+                    #--total-memory-bytes 8589934592 \
+                    --role both \
+                    --meta-address http://0.0.0.0:5690\" \
+                 --frontend-opts=\" \
+                   --config-path /risingwave.toml \
+                   --listen-addr 0.0.0.0:4566 \
+                   --advertise-addr 0.0.0.0:4566 \
+                   --prometheus-listener-addr 0.0.0.0:1250 \
+                   --health-check-listener-addr 0.0.0.0:6786 \
+                   --meta-addr http://0.0.0.0:5690\" \
+                 --compactor-opts=\" \
+                   --listen-addr 0.0.0.0:6660 \
+                   --prometheus-listener-addr 0.0.0.0:1250 \
+                   --advertise-addr 0.0.0.0:6660 \
+                   --meta-address http://0.0.0.0:5690\""
+    expose:
+      - "6660"
+      - "4566"
+      - "5688"
+      - "5690"
+      - "1250"
+      - "5691"
+    ports:
+      - "4566:4566"
+      - "5690:5690"
+      - "5691:5691"
+      - "1250:1250"
+    depends_on:
+      - postgres-0
+      - minio-0
+    networks:
+      - redpanda_network
+    volumes:
+      - "./risingwave.toml:/risingwave.toml"
+    environment:
+      RUST_BACKTRACE: "1"
+      # If ENABLE_TELEMETRY is not set, telemetry will start by default
+      ENABLE_TELEMETRY: ${ENABLE_TELEMETRY:-true}
+    container_name: risingwave-0
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/6660; exit $$?;'
+        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5688; exit $$?;'
+        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/4566; exit $$?;'
+        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5690; exit $$?;'
+      interval: 1s
+      timeout: 5s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 28G
+        reservations:
+          memory: 28G
+
+  postgres-0:
+    image: "postgres:15-alpine"
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=metadata
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    # set wal_level to replica to allow postgres CDC
+    command: ['postgres', '-c', 'wal_level=logical']
+    container_name: postgres-0
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    volumes:
+      - "postgres-0:/var/lib/postgresql/data"
+    networks:
+      - redpanda_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  grafana-0:
+    image: "grafana/grafana-oss:latest"
+    command: []
+    networks:
+      - redpanda_network
+    expose:
+      - "3001"
+    ports:
+      - "3001:3001"
+    depends_on: []
+    volumes:
+      - "grafana-0:/var/lib/grafana"
+      - "./grafana.ini:/etc/grafana/grafana.ini"
+      - "./grafana-risedev-datasource.yml:/etc/grafana/provisioning/datasources/grafana-risedev-datasource.yml"
+      - "./grafana-risedev-dashboard.yml:/etc/grafana/provisioning/dashboards/grafana-risedev-dashboard.yml"
+      - "./dashboards:/dashboards"
+    environment: {}
+    container_name: grafana-0
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/3001; exit $$?;'
+      interval: 1s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  minio-0:
+    image: "quay.io/minio/minio:latest"
+    command:
+      - server
+      - "--address"
+      - "0.0.0.0:9301"
+      - "--console-address"
+      - "0.0.0.0:9400"
+      - /data
+    expose:
+      - "9301"
+      - "9400"
+    ports:
+      - "9301:9301"
+      - "9400:9400"
+    depends_on: []
+    networks:
+      - redpanda_network
+    volumes:
+      - "minio-0:/data"
+    entrypoint: "
+
+      /bin/sh -c '
+
+      set -e
+
+      mkdir -p \"/data/hummock001\"
+
+      /usr/bin/docker-entrypoint.sh \"$$0\" \"$$@\"
+
+      '"
+    environment:
+      MINIO_CI_CD: "1"
+      MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_PROMETHEUS_URL: "http://prometheus-0:9500"
+      MINIO_ROOT_PASSWORD: hummockadmin
+      MINIO_ROOT_USER: hummockadmin
+      MINIO_DOMAIN: "minio-0"
+    container_name: minio-0
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/9301; exit $$?;'
+      interval: 1s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  prometheus-0:
+    image: "prom/prometheus:latest"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--web.listen-address=0.0.0.0:9500"
+      - "--storage.tsdb.retention.time=30d"
+    expose:
+      - "9500"
+    ports:
+      - "9500:9500"
+    depends_on: []
+    networks:
+      - redpanda_network
+    volumes:
+      - "prometheus-0:/prometheus"
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    environment: {}
+    container_name: prometheus-0
+    labels:
+      org.label-schema.group: "monitoring"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - sh -c 'printf "GET /-/healthy HTTP/1.0\n\n" | nc localhost 9500; exit $$?;'
+      interval: 1s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redpanda-0:
+    image: docker.vectorized.io/vectorized/redpanda:latest
+    command:
+      - redpanda
+      - start
+      - "--smp"
+      - "1"
+      - "--reserve-memory"
+      - 0M
+      - "--memory"
+      - 4G
+      - "--overprovisioned"
+      - "--node-id"
+      - "0"
+      - "--check=false"
+      - "--kafka-addr"
+      - "PLAINTEXT://0.0.0.0:19092,OUTSIDE://0.0.0.0:9092"
+      - "--advertise-kafka-addr"
+      - "PLAINTEXT://redpanda-0:19092,OUTSIDE://localhost:9092"
+      - --default-log-level=info
+      - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+      # Address the broker advertises to clients that connect to the HTTP Proxy.
+      - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:18082
+      - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+      # Redpanda brokers use the RPC API to communicate with each other internally.
+      - --rpc-addr redpanda-0:33145
+      - --advertise-rpc-addr redpanda-0:33145
+      # Mode dev-container uses well-known configuration properties for development in containers.
+      - --mode dev-container
+    container_name: redpanda-0
+    volumes:
+      - redpanda-0:/var/lib/redpanda/data
+    networks:
+      - redpanda_network
+    expose:
+      - "19092"
+      - "9092"
+      - "9644"
+    ports:
+      - 19092:19092
+      - "9092:9092"
+      - "9644:9644"
+      - 18081:18081
+      - 18082:18082
+    depends_on: []
+    environment: {}
+    healthcheck:
+      test: curl -f localhost:9644/v1/status/ready
+      interval: 1s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redpanda-console:
+    container_name: redpanda-console
+    image: docker.redpanda.com/redpandadata/console:v2.6.0
+    networks:
+      - redpanda_network
+    entrypoint: /bin/sh
+    command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["redpanda-0:19092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://redpanda-0:8081"]
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda-0:9644"]
+    ports:
+      - 8080:8080
+    depends_on:
+      - redpanda-0
+
+  otel-collector:
+    image: otel/opentelemetry-collector
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
+    container_name: otel-collector
+    networks:
+      - redpanda_network
+    expose:
+      # - 8888
+      - 8889
+    ports:
+      - "1888:1888"   # pprof extension
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "13133:13133" # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP http receiver
+      - "55679:55679" # zpages extension
+
+  
+  
+  # redpanda-topics:
+    # image: docker.vectorized.io/vectorized/redpanda:latest
+    # depends_on:
+      # - redpanda-0
+    # entrypoint: ["/bin/sh", "-c"]
+    # command: |
+      # "
+      # blocks until redpanda is reachable
+      # rpk -X brokers=redpanda-0:19092 topic list 
+
+      # echo -e 'Creating redpanda topics'
+      # rpk -X brokers=redpanda-0:19092 topic create rw-test
+      # rpk -X brokers=redpanda-0:19092 topic create rw-sink
+
+
+      # echo -e 'Successfully created the following topics:'
+      # rpk -X brokers=redpanda-0:19092 topic list 
+      # "
+    # networks:
+      # - redpanda_network 
+
+volumes:
+  postgres-0:
+    external: false
+  grafana-0:
+    external: false
+  minio-0:
+    external: false
+  prometheus-0:
+    external: false
+  redpanda-0:
+    external: false

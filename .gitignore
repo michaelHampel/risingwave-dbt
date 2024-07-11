@@ -1,0 +1,7 @@
+activate/
+.venv/
+dashboards/
+grafana*
+prometheus*
+risingwave.toml
+.DS_Store

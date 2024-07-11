@@ -1,0 +1,105 @@
+// risingwave setup - starts risingwave, postgres, redpanda, grafana, prometheus
+run docker compose up -d in risingwave/docker folder
+
+//create redpanda tokens
+rpk topic create rw-test
+rpk topic create rw-sink
+rpk token list
+
+// connect to redpanda with external kafkaTopic.schema
+cd /opt/homebrew/Cellar/kafka/3.7.0/bin
+kafka-topics --bootstrap-server localhost:9092 --describe --topic rw-test
+
+// python and dbt-risingwave adapter setup
+cd dbt
+python -m venv .venv
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+// dbt project init
+# create dbt project for risisingwave (running in docker)
+# input parameters to set up a profile to connect to the local RisingWave:
+# - host: 127.0.0.1
+# - port: 4566
+# - user: root
+dbt init risingwave_demo
+# check that the adapter is installed successfully
+cd risingwave_demo
+dbt debug --profiles-dir .
+
+// content of profiles.yml
+
+risingwave_demo:
+  outputs:
+    dev:
+      dbname: dev
+      host: 127.0.0.1
+      password: ''
+      port: 4566
+      schema: public
+      threads: 1
+      type: risingwave
+      user: root
+  target: dev
+
+
+// dbt project init
+# create dbt project for postgres (running in docker)
+# input parameters to set up a profile to connect to the local RisingWave:
+# - host: localhost
+# - port: 5432
+# - user: postgres
+dbt init postgres_demo
+# check that the adapter is installed successfully
+cd postgres_demo
+dbt debug 
+
+// content of profiles.yml
+
+postgres_demo:
+  outputs:
+    dev:
+      dbname: postgres
+      host: localhost
+      password: ''
+      port: 5432
+      schema: public
+      threads: 1
+      type: postgres
+      user: postgres
+  target: dev
+
+
+// Create raw_user table in postgres and add data
+dbt sink
+
+// Create users view from raw_user table
+dbt run
+
+// or all-in-one
+dbt build
+
+// connect to postgres and check if table, view has been created and data persisted
+psql -h localhost -p 5432 -U postgres
+
+\dv //show all views
+\dt // show all tables
+
+// run data generator (sends data to rw-test topic)
+python data-generator.py 
+
+// for Jupyter Notebook
+// create kernel
+python3 -m ipykernel install --user --name=rw_kernel
+
+
+// create grafana dashboard 
+docker exec -it redpanda-0 rpk generate grafana-dashboard \
+--datasource prometheus \
+--metrics-endpoint otel-collector:8889/metrics > redpanda-dashboard-otel.json
+
+rpk generate grafana-dashboard \
+  --datasource prometheus \
+  --metrics-endpoint redpanda-0:9644/public_metrics > redpanda-dashboard.json
+

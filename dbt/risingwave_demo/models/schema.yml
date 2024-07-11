@@ -1,0 +1,57 @@
+
+version: 2
+
+models:
+  - name: kafka_website_visits_table
+    description: "RW Table model for website visits, events from Redpanda"
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: user_id
+        data_type: bigint
+        description: "The visiting user ID"
+        tests:
+          - not_null
+      - name: page_id
+        data_type: bigint
+        description: "The visited page ID"
+        tests:
+          - not_null
+      - name: action
+        data_type: varchar
+        description: "The user action"
+        tests:
+          - not_null
+      - name: timestamp
+        description: "Action timestamp"
+        data_type: timestamp
+        tests:
+          - not_null
+
+  - name: kafka_website_visits
+    description: "RW Stream model for website visits, events from Redpanda"
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: user_id
+        data_type: bigint
+        description: "The visiting user ID"
+        tests:
+          - not_null
+      - name: page_id
+        data_type: bigint
+        description: "The visited page ID"
+        tests:
+          - not_null
+      - name: action
+        data_type: varchar
+        description: "The user action"
+        tests:
+          - not_null
+      - name: timestamp
+        description: "Action timestamp"
+        data_type: timestamp
+        tests:
+          - not_null

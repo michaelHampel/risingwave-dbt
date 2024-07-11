@@ -1,0 +1,12 @@
+postgres_demo:
+  outputs:
+    dev:
+      dbname: postgres
+      host: localhost
+      password: ''
+      port: 5432
+      schema: public
+      threads: 1
+      type: postgres
+      user: postgres
+  target: dev
