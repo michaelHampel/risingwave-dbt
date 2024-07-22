@@ -3,6 +3,11 @@ dbt-risingwave
 dbt-postgres
 confluent-kafka==2.3.0
 psycopg2==2.9.9
+psycopg2-binary
+pandas
+plotly
+dash
+nbformat
 pyarrow==15.0.0
 jupyter
 ipykernel

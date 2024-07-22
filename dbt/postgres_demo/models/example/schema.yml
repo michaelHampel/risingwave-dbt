@@ -32,3 +32,62 @@ models:
         data_type: int
         tests:
           - not_null
+  - name: enox_users
+    description: "Enox user dbt model"
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: owner_id
+        description: "The primary key for this table"
+        data_type: varchar(50)
+        constraints:
+          - type: not_null
+          - type: primary_key
+        tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: "The user's first name"
+        data_type: varchar(50)
+        tests:
+          - not_null
+      - name: last_name
+        description: "The user's last name"
+        data_type: varchar(50)
+        tests:
+          - not_null
+      - name: birth_date
+        description: "The user's birth date"
+        data_type: DATE
+      - name: device_id
+        description: "The user's registered device id"
+        data_type: varchar(50)
+        tests:
+          - not_null
+          - unique
+      - name: street
+        description: "The user's street"
+        data_type: varchar(50)
+        tests:
+          - not_null
+      - name: house_nr
+        description: "The user's House Nr"
+        data_type: int
+        tests:
+          - not_null
+      - name: post_code
+        description: "The user's postCode"
+        data_type: int
+        tests:
+          - not_null
+      - name: town
+        description: "The user's town"
+        data_type: varchar(50)
+        tests:
+          - not_null
+      - name: country_code
+        description: "The user's Country Code"
+        data_type: varchar(2)
+        tests:
+          - not_null

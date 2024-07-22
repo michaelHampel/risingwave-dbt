@@ -1,0 +1,11 @@
+owner_id,first_name,last_name,birth_date,device_id,street,house_nr,town,post_code,country_code
+59c3d063-d6d8,Michael,Patton,1988-12-01,1KFM0200001600,Street1,10,Town1,5567,AT
+60c3d063-d6d1,Shawn,Morissey,1967-02-13,1KFM0200001601,Street2,11,Town1,5567,AT
+61c3d063-d6d2,Kathleen,Henley,2000-03-02,1KFM0200001602,Street3,12,Town1,5567,AT
+62c3d063-d6d3,Jimmy,Christie,1966-08-05,1KFM0200001603,Street4,13,Town2,5568,DE
+63c3d063-d6d4,Katherine,Rodriguez,2012-06-10,1KFM0200001604,Street5,14,Town2,5568,DE
+64c3d063-d6d5,Sarah,Pattern,1984-03-25,1KFM0200001605,Street6,15,Town2,5568,DE
+65c3d063-d6d6,Martin,Morales,2001-07-10,1KFM0200001606,Street7,16,Town3,5569,IT
+66c3d063-d6d7,Frank,Sinatra,1960-09-20,1KFM0200001607,Street8,17,Town3,5569,IT
+67c3d063-d6d9,Jennifer,Foley,2002-11-15,1KFM0200001608,Street9,18,Town3,5569,IT
+68c3d063-d6d0,Henry,Watson,1999-05-28,1KFM0200001609,Street10,19,Town1,5567,AT

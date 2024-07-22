@@ -103,3 +103,49 @@ rpk generate grafana-dashboard \
   --datasource prometheus \
   --metrics-endpoint redpanda-0:9644/public_metrics > redpanda-dashboard.json
 
+https://github.com/Aiven-Open/karapace?tab=readme-ov-file
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+  --data @smartMeter_schema.json \
+  http://localhost:8083/subjects/smartMeter-incoming-value/versions
+
+curl -X GET http://localhost:8083/subjects 
+curl -X DELETE http://localhost:8083/subjects/test-key
+curl "http://localhost:8084/topics"
+
+
+-H "Content-Type: application/vnd.schemaregistry.v1+json"
+
+  echo '{
+  "owner": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+  },
+  "required": [
+    "owner" 
+  ],
+  "additionalProperties" : false
+}' | \
+jq '. | {schema: tojson, schemaType: "JSON"}' | \
+curl -X POST "http://localhost:8083/subjects/test1-key-json-schema/versions" -H "Content-Type:application/json"  -d @- 
+
+{"current":{"L1":{"centiAmpere":0},"L2":{"centiAmpere":0},"L3":{"centiAmpere":0}},"device":{"deviceId":{"value":"ECUC012A3101E2.cuculus.net"}},"energy":{"consumption":{"wattHours":140118},"feedIn":{"wattHours":0}},"id":{"id":"11f82b93-d80d-442d-a2fc-d148422e3700"},"meter":{"meterId":{"value":"1KFM0200001600"},"systemTitle":{"data":"4b464d1020000640"}},"owner":{"id":"59c3d063-d6d8-4d07-b1f5-e3a21d884c12"},"power":{"draw":{"watt":0},"feed":{"watt":0}},"readingFrom":"2024-06-13T22:07:55Z","receivedAt":"2024-06-13T20:07:58Z","voltage":{"L1":{"deciVolt":2369},"L2":{"deciVolt":0},"L3":{"deciVolt":0}}}
+{"device":{"deviceId":{"value":"ECUC012A3101E2.cuculus.net"}},"energy":{"consumption":{"wattHours":140118},"feedIn":{"wattHours":0}},"id":{"id":"11f82b93-d80d-442d-a2fc-d148422e3700"},"meter":{"meterId":{"value":"1KFM0200001600"},"systemTitle":{"data":"4b464d1020000640"}},"owner":{"id":"59c3d063-d6d8-4d07-b1f5-e3a21d884c12"},"power":{"draw":{"watt":0},"feed":{"watt":0}},"readingFrom":"2024-06-13T22:07:55Z","receivedAt":"2024-06-13T20:07:58Z","voltage":{"L1":{"deciVolt":2369},"L2":{"deciVolt":0},"L3":{"deciVolt":0}}}
+
+
+kafka-console-producer \
+  --bootstrap-server localhost:9092 \
+  --topic smartMeter-incoming  \
+  --property schema.registry.url=http://localhost:8083 \
+  --property value.schema.id=3
+
+ value.schema="$(curl http://localhost:8081/schemas/ids/419 | jq -r .schema)"
+
+

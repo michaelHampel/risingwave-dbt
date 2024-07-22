@@ -116,3 +116,67 @@ Internal Error
 [0m16:24:05.487113 [debug] [MainThread]: Command `dbt debug` failed at 16:24:05.487055 after 0.07 seconds
 [0m16:24:05.487279 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107f12180>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107b624b0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x107fb1670>]}
 [0m16:24:05.487440 [debug] [MainThread]: Flushing usage events
+[0m10:43:18.348593 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x111ad9f40>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11189f770>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x111b12000>]}
+
+
+============================== 10:43:18.351768 | 7a99e3dc-349d-4b34-8edd-e9aa9869cc8e ==============================
+[0m10:43:18.351768 [info ] [MainThread]: Running with dbt=1.7.17
+[0m10:43:18.352093 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'profiles_dir': '/Users/michham/.dbt', 'debug': 'False', 'version_check': 'True', 'log_path': 'logs', 'warn_error': 'None', 'fail_fast': 'False', 'use_colors': 'True', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'log_format': 'default', 'invocation_command': 'dbt init risingwave-enox', 'static_parser': 'True', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'target_path': 'None', 'introspect': 'True', 'send_anonymous_usage_stats': 'True'}
+[0m10:43:30.115622 [error] [MainThread]: Encountered an error:
+
+[0m10:43:30.124630 [error] [MainThread]: Traceback (most recent call last):
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/dbt/cli/requires.py", line 91, in wrapper
+    result, success = func(*args, **kwargs)
+                      ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/dbt/cli/requires.py", line 76, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/dbt/cli/main.py", line 516, in init
+    results = task.run()
+              ^^^^^^^^^^
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/dbt/task/init.py", line 322, in run
+    project_name = self.get_valid_project_name()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/dbt/task/init.py", line 276, in get_valid_project_name
+    name = click.prompt("Enter a name for your project (letters, digits, underscore)")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/click/termui.py", line 164, in prompt
+    value = prompt_func(prompt)
+            ^^^^^^^^^^^^^^^^^^^
+  File "/Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/click/termui.py", line 147, in prompt_func
+    raise Abort() from None
+click.exceptions.Abort
+
+[0m10:43:30.129072 [debug] [MainThread]: Resource report: {"command_name": "init", "command_wall_clock_time": 11.803277, "process_user_time": 0.77616, "process_kernel_time": 0.084786, "process_mem_max_rss": "102531072", "command_success": false, "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m10:43:30.129917 [debug] [MainThread]: Command `dbt init` failed at 10:43:30.129715 after 11.80 seconds
+[0m10:43:30.131023 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x111953c20>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x111930ec0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x111ab9a30>]}
+[0m10:43:30.131673 [debug] [MainThread]: Flushing usage events
+[0m10:43:47.478551 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11b79e000>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11b7d6210>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11b7d5f40>]}
+
+
+============================== 10:43:47.480814 | 730874e2-8630-488b-bcae-b22f301e51dc ==============================
+[0m10:43:47.480814 [info ] [MainThread]: Running with dbt=1.7.17
+[0m10:43:47.481121 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'write_json': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'warn_error': 'None', 'version_check': 'True', 'debug': 'False', 'log_path': 'logs', 'profiles_dir': '/Users/michham/.dbt', 'fail_fast': 'False', 'use_colors': 'True', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'static_parser': 'True', 'invocation_command': 'dbt init risingwave_enox', 'introspect': 'True', 'target_path': 'None', 'log_format': 'default', 'send_anonymous_usage_stats': 'True'}
+[0m10:43:47.481565 [debug] [MainThread]: Starter project path: /Users/michham/github/risingwave-dbt/dbt/.venv/lib/python3.12/site-packages/dbt/include/starter_project
+[0m10:43:47.484903 [info ] [MainThread]: 
+Your new dbt project "risingwave_enox" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m10:43:47.485072 [info ] [MainThread]: Setting up your profile.
+[0m10:44:42.050447 [info ] [MainThread]: Profile risingwave_enox written to /Users/michham/.dbt/profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m10:44:42.053652 [debug] [MainThread]: Resource report: {"command_name": "init", "command_success": true, "command_wall_clock_time": 54.595642, "process_user_time": 0.80742, "process_kernel_time": 0.076677, "process_mem_max_rss": "104333312", "process_in_blocks": "0", "process_out_blocks": "0"}
+[0m10:44:42.054638 [debug] [MainThread]: Command `dbt init` succeeded at 10:44:42.054443 after 54.60 seconds
+[0m10:44:42.055242 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x104e61460>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11b2af8f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x119ef63c0>]}
+[0m10:44:42.055838 [debug] [MainThread]: Flushing usage events

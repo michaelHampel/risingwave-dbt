@@ -14,7 +14,7 @@ rpk topic list
 echo -e 'Starting data generator...'
 
 # Activate the virtual environment
-source .venv/bin/activate
+source ../.venv/bin/activate
 
 # Run the Python script
 python data-generator.py
