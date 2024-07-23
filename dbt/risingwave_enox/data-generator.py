@@ -3,10 +3,14 @@ import json
 from datetime import datetime, timezone
 import time
 import logging
+import psycopg2
+import random
 from confluent_kafka import Producer
 from confluent_kafka.serialization import StringSerializer, SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.json_schema import JSONSerializer
+from faker import Faker
+from faker.providers import DynamicProvider
 
 
 class Current:
@@ -165,20 +169,6 @@ class SmartMeterData:
         self.receivedAt = receivedAt
         self.voltage = voltage
 
-message = SmartMeterData (
-    Current(Measurement(0), Measurement(1), Measurement(2)),
-    Device(Value('wer1234')),
-    Energy(Reading(140118), Reading(2345)),
-    Id('miHam'),
-    Meter(Value('1KFM0200001600'), SystemTitle('4b464d1020000640')),
-    Owner('59c3d063-d6d8-4d07-b1f5-e3a21d884c12'),
-    Power(Watt(12), Watt(27)),
-    '2024-06-13T22:07:55Z',
-    '2024-06-13T20:07:58Z',
-    Voltage(DeciVolt(2369), DeciVolt(333), DeciVolt(98765))
-)
-
-
 
 logging.basicConfig()
 logging.root.setLevel(logging.INFO)
@@ -199,8 +189,58 @@ schema_registry_url = "http://localhost:8083"
 
 # Create clients
 schema_registry_client = SchemaRegistryClient({"url": schema_registry_url})
-
 string_serializer = StringSerializer('utf_8')
+
+
+def postgres_connect():
+    """ Connect to the PostgreSQL database server """
+    try:
+        # connecting to the PostgreSQL server
+        with psycopg2.connect( 
+            host="localhost", 
+            port=5432, 
+            user="postgres", 
+            dbname="postgres"
+        ) as conn:
+            logging.info('Connected to PostgreS.')
+            conn.autocommit = True
+            return conn
+    except (psycopg2.DatabaseError, Exception) as error:
+        logging.error(error)
+
+def get_owner_ids_and_device_ids(conn):
+    """
+    Selects all owner_ids and device_ids from the enox_users table.
+
+    Args:
+        conn: A psycopg2 connection object.
+
+    Returns:
+        A list of tuples, where each tuple contains an owner_id and a device_id.
+    """
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT owner_id, device_id FROM enox_users")
+        rows = cur.fetchall()
+    return rows
+
+def random_owner_and_device(conn, num_iterations):
+    """
+    Randomly chooses an owner_id and device_id from the pg_enox_users table in a loop.
+
+    Args:
+        conn: A psycopg2 connection object.
+        num_iterations: The number of iterations to run the loop.
+    """
+
+    owner_ids_and_device_ids = get_owner_ids_and_device_ids(conn)
+
+    for _ in range(num_iterations):
+        random_index = random.randint(0, len(owner_ids_and_device_ids) - 1)
+        owner_id, device_id = owner_ids_and_device_ids[random_index]
+        print(f"Random owner_id: {owner_id}, device_id: {device_id}")
+
+
 
 def smartMeterData_to_dict(data, ctx):
         return {
@@ -268,6 +308,32 @@ def send_message(producer, topic, message):
 if __name__ == "__main__":
 
     nr = 0
+
+    ps_conn = postgres_connect()
+
+    user_info_provider = DynamicProvider (
+        provider_name = "user_info",
+        elements = get_owner_ids_and_device_ids(ps_conn),
+    )
+
+    fake = Faker()
+    fake.add_provider(user_info_provider)
+
+    owner_id, device_id = fake.user_info()
+    logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}")
+
+    message = SmartMeterData (
+        Current(Measurement(0), Measurement(1), Measurement(2)),
+        Device(Value('wer1234')),
+        Energy(Reading(140118), Reading(2345)),
+        Id('miHam'),
+        Meter(Value('1KFM0200001600'), SystemTitle('4b464d1020000640')),
+        Owner('59c3d063-d6d8-4d07-b1f5-e3a21d884c12'),
+        Power(Watt(12), Watt(27)),
+        '2024-06-13T22:07:55Z',
+        '2024-06-13T20:07:58Z',
+        Voltage(DeciVolt(2369), DeciVolt(333), DeciVolt(98765))
+    )
 
     try:
     # Produce messages to the Kafka topic

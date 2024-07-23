@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS {{ this }} (
   house_nr INT,
   town VARCHAR,
   post_code INT,
-  country_code VARCHAR
+  country_code VARCHAR,
+  registered_at timestamptz
 ) WITH (
   connector = 'postgres-cdc',
   hostname = 'postgres-0',
