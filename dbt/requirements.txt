@@ -11,3 +11,4 @@ nbformat
 pyarrow==15.0.0
 jupyter
 ipykernel
+faker

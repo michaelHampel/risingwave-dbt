@@ -1,16 +1,18 @@
 import random
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 import time
 import logging
 import psycopg2
 import random
+from zoneinfo import ZoneInfo
 from confluent_kafka import Producer
 from confluent_kafka.serialization import StringSerializer, SerializationContext, MessageField
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.json_schema import JSONSerializer
 from faker import Faker
 from faker.providers import DynamicProvider
+
 
 
 class Current:
@@ -285,6 +287,26 @@ def download_latest_schema(schema_registry_client, subject):
   print(registered_schema.schema.schema_str)
   return registered_schema.schema.schema_str
 
+def next_message(fake):
+    owner_id, device_id = fake.user_info()
+    logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}")
+    read_time = fake.date_time_between(start_date= '-7d', tzinfo=ZoneInfo('Europe/Vienna'))
+    received_time = read_time + timedelta(seconds = random.randint(1,5))
+    message = SmartMeterData (
+        Current(Measurement(random.randint(0,10)), Measurement(random.randint(0,10)), Measurement(random.randint(0,10))),
+        Device(Value(device_id)),
+        Energy(Reading(random.randint(100,100000)), Reading(random.randint(0, 40))),
+        Id(fake.pystr_format()),
+        Meter(Value(fake.pystr_format()), SystemTitle(fake.pystr_format())),
+        Owner(owner_id),
+        Power(Watt(random.randint(5,50)), Watt(random.randint(2,60))),
+        read_time.strftime("%d/%m/%Y, %H:%M:%S"),
+        received_time.strftime("%d/%m/%Y, %H:%M:%S"),
+        Voltage(DeciVolt(random.randint(100,10000)), DeciVolt(random.randint(200,8000)), DeciVolt(random.randint(300,15000)))
+    )
+    return message
+
+
 def send_message(producer, topic, message):
   """
   Sends a JSON message to the specified topic using the provided schema ID.
@@ -292,12 +314,12 @@ def send_message(producer, topic, message):
   Args:
       producer: A Kafka Producer instance.
       topic: The name of the Kafka topic.
-      message: The JSON message to send.
-      schema_id: The ID of the schema to use for serialization.
+      value: JSON message to send and SerializationContext with configured schema.
+      on_delivery: callback function or None
   """
   producer.produce (
      topic = topic, 
-     key  = string_serializer("userOne"),
+     key  = string_serializer(message.owner.id),
      value = json_serializer(
         message, 
         SerializationContext(topic, MessageField.VALUE)), 
@@ -319,22 +341,6 @@ if __name__ == "__main__":
     fake = Faker()
     fake.add_provider(user_info_provider)
 
-    owner_id, device_id = fake.user_info()
-    logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}")
-
-    message = SmartMeterData (
-        Current(Measurement(0), Measurement(1), Measurement(2)),
-        Device(Value('wer1234')),
-        Energy(Reading(140118), Reading(2345)),
-        Id('miHam'),
-        Meter(Value('1KFM0200001600'), SystemTitle('4b464d1020000640')),
-        Owner('59c3d063-d6d8-4d07-b1f5-e3a21d884c12'),
-        Power(Watt(12), Watt(27)),
-        '2024-06-13T22:07:55Z',
-        '2024-06-13T20:07:58Z',
-        Voltage(DeciVolt(2369), DeciVolt(333), DeciVolt(98765))
-    )
-
     try:
     # Produce messages to the Kafka topic
         if is_broker_available():
@@ -347,162 +353,17 @@ if __name__ == "__main__":
                 print(f"Error: No schema found for subject {schema_subject}!!")
             else:
                 json_serializer = JSONSerializer(schema, schema_registry_client, smartMeterData_to_dict)
-                while nr < 10:
-                    send_message(producer, topic, message)
+                while nr < 20000:
+                    send_message(producer, topic, next_message(fake))
                     producer.poll(0)  # Flush outstanding deliveries
 
                     time.sleep(1/rate_per_second)
                     nr += 1
-                    logging.info(f"Sent msg: {message}")
+                    if nr % 100 == 0:
+                        logging.info(f"Sent {nr} records")
 
     finally:
         print('Producer closed')
 
         # Wait for any outstanding messages to be delivered and delivery reports received
         producer.flush() 
-    
-"""
-
-# Generate a random action
-def generate_action():
-    actions = ['click', 'scroll', 'view']
-    return random.choice(actions)
-
-def generate_value():
-    return random.randint(1, 50000)
-
-# Generate random purchase event
-def generate_purchase_event():
-    action = generate_action()
-    user_id = random.randint(1,10)
-    page_id = random.randint(1,15)
-    current_time_utc = datetime.now(timezone.utc)
-    action_time = current_time_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
-    return {
-        "page_id": page_id,
-        "user_id": user_id,
-        "action": action,
-        "timestamp": action_time,
-    }
-
-# Generate random purchase event
-def generate_purchase_event():
-    action = generate_action()
-    user_id = random.randint(1,10)
-    page_id = random.randint(1,15)
-    current_time_utc = datetime.now(timezone.utc)
-    action_time = current_time_utc.strftime('%Y-%m-%dT%H:%M:%SZ')
-    return {
-        "current":
-        {
-            "L1":{"centiAmpere":0},
-            "L2":{"centiAmpere":0},
-            "L3":{"centiAmpere":0}
-        },
-    "device":
-        {
-            "deviceId":
-                {
-                    "value":"ECUC012A3101E2.cuculus.net"
-                }
-        },
-    "energy":
-        {
-            "consumption":
-                {
-                    "wattHours":140118
-                },
-            "feedIn":
-                {
-                    "wattHours":0
-                }
-        },
-    "id":
-        {
-            "id":"11f82b93-d80d-442d-a2fc-d148422e3700"
-        },
-    "meter":
-        {
-            "meterId":
-                {
-                    "value":"1KFM0200001600"
-                },
-            "systemTitle":
-                {
-                    "data":"4b464d1020000640"
-                }
-        },
-    "owner":
-        {
-            "id":"59c3d063-d6d8-4d07-b1f5-e3a21d884c12"
-        },
-    "power":
-        {
-            "draw":
-                {
-                    "watt":0
-                },
-            "feed":
-                {
-                    "watt":0
-                }
-        },
-    "readingFrom":"2024-06-13T22:07:55Z",
-    "receivedAt":"2024-06-13T20:07:58Z",
-    "voltage":
-        {
-            "L1":
-                {
-                    "deciVolt":2369
-                },
-            "L2":
-                {
-                    "deciVolt":0
-                },
-            "L3":
-                {
-                    "deciVolt":0
-                }
-        }
-    }
-
-
-# Kafka topic to produce messages to
-topic = 'rw-test'
-
-kafka_config = {
-    'bootstrap.servers': "localhost:9092"
-}
-
-# Kafka producer
-producer = Producer(**kafka_config)
-
-if __name__ == "__main__":
-
-    nr = 0
-
-    try:
-    # Produce messages to the Kafka topic
-        if is_broker_available():
-            logging.info(f"Sending 20,000 records to Kafka")
-            while nr < 20000:
-
-                message = generate_purchase_event()
-                message_str = json.dumps(message).encode('utf-8')
-                key_str = str(message["user_id"]).encode('utf-8')
-
-                producer.produce(topic, value=message_str, key=key_str)
-
-                time.sleep(1/rate_per_second)
-                nr += 1
-                if nr % 100 == 0:
-                    logging.info(f"Sent {nr} records")
-
-    finally:
-
-        print('Producer closed')
-
-        # Wait for any outstanding messages to be delivered and delivery reports received
-        producer.flush() 
-
-"""

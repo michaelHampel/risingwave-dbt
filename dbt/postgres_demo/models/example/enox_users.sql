@@ -20,7 +20,8 @@ enox_users as (
         house_nr,
         town,
         post_code,
-        country_code
+        country_code,
+        registered_at
     from source
 )
 

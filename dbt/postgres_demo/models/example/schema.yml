@@ -91,3 +91,8 @@ models:
         data_type: varchar(2)
         tests:
           - not_null
+      - name: registered_at
+        description: "The user's registration timestamp"
+        data_type: timestamp
+        tests:
+          - not_null
