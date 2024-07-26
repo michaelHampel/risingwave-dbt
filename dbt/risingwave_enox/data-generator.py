@@ -210,19 +210,19 @@ def postgres_connect():
     except (psycopg2.DatabaseError, Exception) as error:
         logging.error(error)
 
-def get_owner_ids_and_device_ids(conn):
+def get_user_info(conn):
     """
-    Selects all owner_ids and device_ids from the enox_users table.
+    Selects user_info from the enox_users table.
 
     Args:
         conn: A psycopg2 connection object.
 
     Returns:
-        A list of tuples, where each tuple contains an owner_id and a device_id.
+        A list of triples, where each triple contains owner_id, device_id and smartMeter_mac
     """
 
     with conn.cursor() as cur:
-        cur.execute("SELECT owner_id, device_id FROM enox_users")
+        cur.execute("SELECT owner_id, device_id, smartMeter_mac FROM enox_users")
         rows = cur.fetchall()
     return rows
 
@@ -235,12 +235,12 @@ def random_owner_and_device(conn, num_iterations):
         num_iterations: The number of iterations to run the loop.
     """
 
-    owner_ids_and_device_ids = get_owner_ids_and_device_ids(conn)
+    user_ids = get_user_info(conn)
 
     for _ in range(num_iterations):
-        random_index = random.randint(0, len(owner_ids_and_device_ids) - 1)
-        owner_id, device_id = owner_ids_and_device_ids[random_index]
-        print(f"Random owner_id: {owner_id}, device_id: {device_id}")
+        random_index = random.randint(0, len(user_ids) - 1)
+        owner_id, device_id, smartMeter_mac = user_ids[random_index]
+        print(f"Random owner_id: {owner_id}, device_id: {device_id}, smartmeter_mac: {smartMeter_mac}")
 
 
 
@@ -288,8 +288,8 @@ def download_latest_schema(schema_registry_client, subject):
   return registered_schema.schema.schema_str
 
 def next_message(fake):
-    owner_id, device_id = fake.user_info()
-    logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}")
+    owner_id, device_id, smartMeter_mac = fake.user_info()
+    logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}, smartMeter_mac: {smartMeter_mac}")
     read_time = fake.date_time_between(start_date= '-7d', tzinfo=ZoneInfo('Europe/Vienna'))
     received_time = read_time + timedelta(seconds = random.randint(1,5))
     message = SmartMeterData (
@@ -297,7 +297,7 @@ def next_message(fake):
         Device(Value(device_id)),
         Energy(Reading(random.randint(100,100000)), Reading(random.randint(0, 40))),
         Id(fake.pystr_format()),
-        Meter(Value(fake.pystr_format()), SystemTitle(fake.pystr_format())),
+        Meter(Value(fake.pystr_format()), SystemTitle(smartMeter_mac)),
         Owner(owner_id),
         Power(Watt(random.randint(5,50)), Watt(random.randint(2,60))),
         read_time.strftime("%d/%m/%Y, %H:%M:%S"),
@@ -335,7 +335,7 @@ if __name__ == "__main__":
 
     user_info_provider = DynamicProvider (
         provider_name = "user_info",
-        elements = get_owner_ids_and_device_ids(ps_conn),
+        elements = get_user_info(ps_conn),
     )
 
     fake = Faker()

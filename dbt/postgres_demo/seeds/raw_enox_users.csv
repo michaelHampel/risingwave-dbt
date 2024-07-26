@@ -1,11 +1,11 @@
-owner_id,first_name,last_name,birth_date,device_id,street,house_nr,town,post_code,country_code,registered_at
-59c3d063-d6d8,Michael,Patton,1988-12-01,ECUC012A3101E0.cuculus.net,Street1,10,Town1,5567,AT,2024-05-22 16:40:55 
-60c3d063-d6d1,Shawn,Morissey,1967-02-13,ECUC012A3101F1.cuculus.net,Street2,11,Town1,5567,AT,2023-06-12 11:10:12 
-61c3d063-d6d2,Kathleen,Henley,2000-03-02,ECUC012A3101G2.cuculus.net,Street3,12,Town1,5567,AT,2023-08-29 08:22:33 
-62c3d063-d6d3,Jimmy,Christie,1966-08-05,ECUC012A3101H3.cuculus.net,Street4,13,Town2,5568,DE,2024-01-05 20:35:14 
-63c3d063-d6d4,Katherine,Rodriguez,2012-06-10,ECUC012A3101I4.cuculus.net,Street5,14,Town2,5568,DE,2024-03-04 10:54:36 
-64c3d063-d6d5,Sarah,Pattern,1984-03-25,ECUC012A3101J5.cuculus.net,Street6,15,Town2,5568,DE,2023-10-31 07:18:48 
-65c3d063-d6d6,Martin,Morales,2001-07-10,ECUC012A3101K6.cuculus.net,Street7,16,Town3,5569,IT,2023-11-22 16:48:55 
-66c3d063-d6d7,Frank,Sinatra,1960-09-20,ECUC012A3101L7.cuculus.net,Street8,17,Town3,5569,IT,2024-02-13 15:16:28 
-67c3d063-d6d9,Jennifer,Foley,2002-11-15,ECUC012A3101M8.cuculus.net,Street9,18,Town3,5569,IT,2023-09-28 09:40:55 
-68c3d063-d6d0,Henry,Watson,1999-05-28,ECUC012A3101N9.cuculus.net,Street10,19,Town1,5567,AT,2024-03-22 22:07:18 
+owner_id,first_name,last_name,birth_date,device_id,smartmeter_mac,street,house_nr,town,post_code,country_code,registered_at
+59c3d063-d6d8,Michael,Patton,1988-12-01,ECUC012A3101E0.cuculus.net,4b464d1020000640,Street1,10,Town1,5567,AT,2024-05-22 16:40:55 
+60c3d063-d6d1,Shawn,Morissey,1967-02-13,ECUC012A3101F1.cuculus.net,4b464d1030000150,Street1,11,Town1,5567,AT,2023-06-12 11:10:12 
+61c3d063-d6d2,Kathleen,Henley,2000-03-02,ECUC012A3101G2.cuculus.net,4b464d1040000260,Street3,12,Town1,5567,AT,2023-08-29 08:22:33 
+62c3d063-d6d3,Jimmy,Christie,1966-08-05,ECUC012A3101H3.cuculus.net,4b464d1050000370,Street2,13,Town2,5568,DE,2024-01-05 20:35:14 
+63c3d063-d6d4,Katherine,Rodriguez,2012-06-10,ECUC012A3101I4.cuculus.net,4b464d1060000480,Street5,14,Town2,5568,DE,2024-03-04 10:54:36 
+64c3d063-d6d5,Sarah,Pattern,1984-03-25,ECUC012A3101J5.cuculus.net,4b464d1070000590,Street2,15,Town2,5568,DE,2023-10-31 07:18:48 
+65c3d063-d6d6,Martin,Morales,2001-07-10,ECUC012A3101K6.cuculus.net,4b464d1080000600,Street7,16,Town3,5569,IT,2023-11-22 16:48:55 
+66c3d063-d6d7,Frank,Sinatra,1960-09-20,ECUC012A3101L7.cuculus.net,4b464d1090000710,Street8,17,Town3,5569,IT,2024-02-13 15:16:28 
+67c3d063-d6d9,Jennifer,Foley,2002-11-15,ECUC012A3101M8.cuculus.net,4b464d1010000820,Street9,18,Town3,5569,IT,2023-09-28 09:40:55 
+68c3d063-d6d0,Henry,Watson,1999-05-28,ECUC012A3101N9.cuculus.net,4b464d1020000930,Street1,19,Town1,5567,AT,2024-03-22 22:07:18 

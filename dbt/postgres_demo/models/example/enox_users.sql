@@ -16,6 +16,7 @@ enox_users as (
         last_name,
         birth_date,
         device_id,
+        smartmeter_mac,
         street,
         house_nr,
         town,

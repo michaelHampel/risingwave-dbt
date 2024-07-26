@@ -66,6 +66,12 @@ models:
         tests:
           - not_null
           - unique
+      - name: smartmeter_mac
+        description: "The user's SmartMeter Mac adress"
+        data_type: varchar(50)
+        tests:
+          - not_null
+          - unique
       - name: street
         description: "The user's street"
         data_type: varchar(50)

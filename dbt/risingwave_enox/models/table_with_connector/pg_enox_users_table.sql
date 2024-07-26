@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS {{ this }} (
   last_name VARCHAR,
   birth_date DATE,
   device_id VARCHAR,
+  smartmeter_mac VARCHAR,
   street VARCHAR,
   house_nr INT,
   town VARCHAR,
