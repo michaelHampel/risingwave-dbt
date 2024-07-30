@@ -175,8 +175,6 @@ class SmartMeterData:
 logging.basicConfig()
 logging.root.setLevel(logging.INFO)
 
-rate_per_second = 5
-
 # Kafka topic to produce messages to
 topic = 'smartMeter-incoming'
 
@@ -295,13 +293,13 @@ def next_message(fake):
     message = SmartMeterData (
         Current(Measurement(random.randint(0,10)), Measurement(random.randint(0,10)), Measurement(random.randint(0,10))),
         Device(Value(device_id)),
-        Energy(Reading(random.randint(100,100000)), Reading(random.randint(0, 40))),
+        Energy(Reading(random.randint(2, 30)), Reading(random.randint(0, 40))),
         Id(fake.pystr_format()),
         Meter(Value(fake.pystr_format()), SystemTitle(smartMeter_mac)),
         Owner(owner_id),
         Power(Watt(random.randint(5,50)), Watt(random.randint(2,60))),
-        read_time.strftime("%d/%m/%Y, %H:%M:%S"),
-        received_time.strftime("%d/%m/%Y, %H:%M:%S"),
+        str(read_time),
+        str(received_time),
         Voltage(DeciVolt(random.randint(100,10000)), DeciVolt(random.randint(200,8000)), DeciVolt(random.randint(300,15000)))
     )
     return message
@@ -330,6 +328,7 @@ def send_message(producer, topic, message):
 if __name__ == "__main__":
 
     nr = 0
+    rate_per_second = 25
 
     ps_conn = postgres_connect()
 
