@@ -159,6 +159,7 @@ services:
       set -e
 
       mkdir -p \"/data/hummock001\"
+      mkdir -p \"/data/enox-bucket\"
 
       /usr/bin/docker-entrypoint.sh \"$$0\" \"$$@\"
 
