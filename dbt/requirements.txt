@@ -13,3 +13,4 @@ jupyter
 ipykernel
 faker
 boto3
+sentry-sdk

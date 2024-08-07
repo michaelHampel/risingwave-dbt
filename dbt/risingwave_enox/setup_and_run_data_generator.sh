@@ -16,10 +16,10 @@ rpk topic list
 echo -e 'Register JSON Schema with Karapace Schema Registry'
 curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" \
      --data @smartMeter_schema.json \
-     http://localhost:8083/subjects/smartMeter-incoming-value/versions
+     http://localhost:8085/subjects/smartMeter-incoming-value/versions
 
-echo -e 'Registered Scema subjects: '
-curl -X GET http://localhost:8083/subjects 
+echo -e 'Registered Schema subjects: '
+curl -X GET http://localhost:8085/subjects 
 
 echo -e 'Starting smart-meter data generator...'
 

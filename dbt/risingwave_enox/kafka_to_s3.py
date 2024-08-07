@@ -10,8 +10,8 @@ import boto3
 from domain import *
 
 # Credentials and Connection Info
-access_key = "hummockadmin"
-secret_key = "hummockadmin"
+access_key = "minioadmin"
+secret_key = "minio123"
 endpoint = "http://localhost:9301"  # MinIO endpoint
 region = "eu-west-1"
 
@@ -23,7 +23,7 @@ session = boto3.Session(
 s3 = session.client('s3', endpoint_url=endpoint, region_name=region)
 
 # Schema Registry Configuration
-schema_registry_url = "http://localhost:8083"
+schema_registry_url = "http://localhost:8085"
 schema_subject = 'smartMeter-incoming-value'
 
 schema_registry_client = SchemaRegistryClient({"url": schema_registry_url})

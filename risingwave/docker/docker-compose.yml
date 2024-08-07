@@ -14,7 +14,7 @@ services:
                     --prometheus-endpoint http://prometheus-0:9500 \
                     --backend sql \
                     --sql-endpoint postgres://postgres:@postgres-0:5432/metadata \
-                    --state-store hummock+minio://hummockadmin:hummockadmin@minio-0:9301/hummock001 \
+                    --state-store hummock+minio://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio-0:9301/hummock001 \
                     --data-directory hummock_001 \
                     --config-path /risingwave.toml\" \
                  --compute-opts=\" \
@@ -152,24 +152,12 @@ services:
       - redpanda_network
     volumes:
       - "minio-0:/data"
-    entrypoint: "
-
-      /bin/sh -c '
-
-      set -e
-
-      mkdir -p \"/data/hummock001\"
-      mkdir -p \"/data/enox-bucket\"
-
-      /usr/bin/docker-entrypoint.sh \"$$0\" \"$$@\"
-
-      '"
     environment:
       MINIO_CI_CD: "1"
       MINIO_PROMETHEUS_AUTH_TYPE: public
       MINIO_PROMETHEUS_URL: "http://prometheus-0:9500"
-      MINIO_ROOT_PASSWORD: hummockadmin
-      MINIO_ROOT_USER: hummockadmin
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_DOMAIN: "minio-0"
     container_name: minio-0
     healthcheck:
@@ -180,6 +168,25 @@ services:
       timeout: 5s
       retries: 5
     restart: always
+  
+  mc:
+    image: minio/mc
+    container_name: mc
+    hostname: mc
+    networks:
+      - redpanda_network
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config;
+      until (/usr/bin/mc config host add minio http://minio-0:9301 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}) do echo '...waiting...' && sleep 1; 
+      done; 
+      /usr/bin/mc mb minio/hummock001; /usr/bin/mc policy set public minio/hummock001; 
+      /usr/bin/mc mb minio/enox-bucket; /usr/bin/mc policy set public minio/enox-bucket; 
+
+      exit 0; 
+      "
+    depends_on:
+      - minio-0
 
   prometheus-0:
     image: "prom/prometheus:latest"
@@ -280,7 +287,12 @@ services:
           brokers: ["redpanda-0:19092"]
           schemaRegistry:
             enabled: true
-            urls: ["http://redpanda-0:8081"]
+            urls: ["http://karapace-registry:8085"]
+        connect:
+          enabled: true
+          clusters:
+            - name: local-connect-cluster
+              url: http://connect:8083
         redpanda:
           adminApi:
             enabled: true
@@ -289,6 +301,7 @@ services:
       - 8080:8080
     depends_on:
       - redpanda-0
+      - karapace-registry
 
   karapace-registry:
     image: ghcr.io/aiven-open/karapace:develop
@@ -305,11 +318,11 @@ services:
     depends_on:
       - redpanda-0
     ports:
-      - "8083:8083"
+      - "8085:8085"
     environment:
       KARAPACE_ADVERTISED_HOSTNAME: karapace-registry
       KARAPACE_BOOTSTRAP_URI: redpanda-0:19092
-      KARAPACE_PORT: 8083
+      KARAPACE_PORT: 8085
       KARAPACE_HOST: 0.0.0.0
       KARAPACE_CLIENT_ID: karapace
       KARAPACE_GROUP_ID: karapace-registry
@@ -341,7 +354,7 @@ services:
       KARAPACE_ADVERTISED_HOSTNAME: karapace-rest
       KARAPACE_BOOTSTRAP_URI: redpanda-0:19092
       KARAPACE_REGISTRY_HOST: karapace-registry
-      KARAPACE_REGISTRY_PORT: 8083
+      KARAPACE_REGISTRY_PORT: 8085
       KARAPACE_ADMIN_METADATA_MAX_AGE: 0
       KARAPACE_LOG_LEVEL: WARNING
 

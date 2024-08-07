@@ -151,3 +151,48 @@ kafka-console-producer \
  value.schema="$(curl http://localhost:8081/schemas/ids/419 | jq -r .schema)"
 
 
+  command: 
+      - bash 
+      - -c 
+      - |
+        #
+        echo "Installing connector plugins"
+        confluent-hub install --no-prompt confluentinc/kafka-connect-latest
+        #
+        echo "Launching Kafka Connect worker"
+        /etc/confluent/docker/run & 
+        #
+        echo "Waiting for Kafka Connect to start listening on localhost ⏳"
+        while : ; do
+          curl_status=$$(curl -s -o /dev/null -w %{http_code} http://localhost:8083/connectors)
+          echo -e $$(date) " Kafka Connect listener HTTP state: " $$curl_status " (waiting for 200)"
+          if [ $$curl_status -eq 200 ] ; then
+            break
+          fi
+          sleep 5 
+        done
+        echo -e "\n--\n+> Creating connector"
+        curl -X PUT \
+        -H 'Content-Type: application/json' \
+        -H 'Accept: application/json' http://localhost:8083/connectors/S3SinkConnector/config \
+        -d '{
+        "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+        "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+        "s3.region": "eu-west-1",
+        "s3.bucket.name": "enox-bucket",
+        "flush.size": "150",
+        "schema.compatibility": "NONE",
+        "tasks.max": "1",
+        "topics": "test",
+        "store.url": "http://minio-0:9301",
+        "key.converter.schemas.enable": "false",
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+        "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+        "value.converter.schemas.enable": "false",
+        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+        "schemas.enable": "false"
+        }'
+        sleep infinity
+
+

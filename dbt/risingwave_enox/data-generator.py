@@ -28,7 +28,7 @@ kafka_config = {
 # Kafka producer
 producer = Producer(**kafka_config)
 
-schema_registry_url = "http://localhost:8083"  
+schema_registry_url = "http://localhost:8085"  
 
 # Create clients
 schema_registry_client = SchemaRegistryClient({"url": schema_registry_url})

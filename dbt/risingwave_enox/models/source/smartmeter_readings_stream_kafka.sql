@@ -17,5 +17,5 @@ WITH (
   scan.startup.mode='earliest'
 ) 
 FORMAT PLAIN ENCODE JSON (
-    schema.registry = 'http://karapace-registry:8083'
+    schema.registry = 'http://karapace-registry:8085'
 ) 
