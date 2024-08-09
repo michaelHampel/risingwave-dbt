@@ -60,18 +60,15 @@ services:
         "connector.class": "io.confluent.connect.s3.S3SinkConnector",
         "storage.class": "io.confluent.connect.s3.storage.S3Storage",
         "s3.region": "eu-west-1",
-        "s3.bucket.name": "enox-bucket",
+        "s3.bucket.name": "${MINIO_ENOX_BUCKET}",
         "flush.size": "150",
         "schema.compatibility": "NONE",
         "tasks.max": "1",
+        "topics.dir": "live",
         "topics": "smartMeter-incoming",
         "store.url": "http://minio-0:9301",
-        "key.converter.schemas.enable": "false",
-        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
-        "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-        "value.converter.schemas.enable": "false",
-        "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
-        "value.converter.schema.registry.url": "http://karapace-registry:8085"
+        "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
+        "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner"
         }'
         sleep infinity

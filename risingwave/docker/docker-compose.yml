@@ -5,7 +5,7 @@ networks:
     driver: bridge
 services:
   risingwave-0:
-    image: "risingwavelabs/risingwave:latest"
+    image: "risingwavelabs/risingwave:v1.10.0"
     command: "standalone --meta-opts=\" \
                     --listen-addr 0.0.0.0:5690 \
                     --advertise-addr 0.0.0.0:5690 \
@@ -14,8 +14,8 @@ services:
                     --prometheus-endpoint http://prometheus-0:9500 \
                     --backend sql \
                     --sql-endpoint postgres://postgres:@postgres-0:5432/metadata \
-                    --state-store hummock+minio://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio-0:9301/hummock001 \
-                    --data-directory hummock_001 \
+                    --state-store hummock+minio://${MINIO_ACCESS_KEY}:${MINIO_SECRET_KEY}@minio-0:9301/${MINIO_RW_BUCKET} \
+                    --data-directory ${MINIO_RW_BUCKET} \
                     --config-path /risingwave.toml\" \
                  --compute-opts=\" \
                     --config-path /risingwave.toml \
@@ -156,8 +156,8 @@ services:
       MINIO_CI_CD: "1"
       MINIO_PROMETHEUS_AUTH_TYPE: public
       MINIO_PROMETHEUS_URL: "http://prometheus-0:9500"
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
       MINIO_DOMAIN: "minio-0"
     container_name: minio-0
     healthcheck:
@@ -180,8 +180,8 @@ services:
       /usr/bin/mc config;
       until (/usr/bin/mc config host add minio http://minio-0:9301 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}) do echo '...waiting...' && sleep 1; 
       done; 
-      /usr/bin/mc mb minio/hummock001; /usr/bin/mc policy set public minio/hummock001; 
-      /usr/bin/mc mb minio/enox-bucket; /usr/bin/mc policy set public minio/enox-bucket; 
+      /usr/bin/mc mb minio/${MINIO_RW_BUCKET}; /usr/bin/mc policy set public minio/${MINIO_RW_BUCKET}; 
+      /usr/bin/mc mb minio/${MINIO_ENOX_BUCKET}; /usr/bin/mc policy set public minio/${MINIO_ENOX_BUCKET}; 
 
       exit 0; 
       "

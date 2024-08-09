@@ -18,4 +18,4 @@ SELECT
   "receivedAt"::timestamptz as received_ts,
   voltage
 FROM 
-  {{ ref('smartmeter_readings_stream_kafka')}} K INNER JOIN {{ ref('pg_enox_users_table')}} P on (K.owner).id = P.owner_id
+  {{ ref('smartmeter_readings_stream_kafka')}} K INNER JOIN {{ ref('pg_enox_users')}} P on (K.owner).id = P.owner_id

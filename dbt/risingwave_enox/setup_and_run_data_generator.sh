@@ -8,6 +8,7 @@ rpk topic list
 
 echo -e 'Creating redpanda topics'
 rpk topic create smartMeter-incoming
+rpk topic add-partitions smartMeter-incoming --num 9
 rpk topic create smartMeter-p-town -p 5  # 5 partitions
 
 echo -e 'Successfully created the following topics:'

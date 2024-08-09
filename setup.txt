@@ -136,9 +136,7 @@ curl "http://localhost:8084/topics"
 jq '. | {schema: tojson, schemaType: "JSON"}' | \
 curl -X POST "http://localhost:8083/subjects/test1-key-json-schema/versions" -H "Content-Type:application/json"  -d @- 
 
-{"current":{"L1":{"centiAmpere":0},"L2":{"centiAmpere":0},"L3":{"centiAmpere":0}},"device":{"deviceId":{"value":"ECUC012A3101E2.cucul
-
-us.net"}},"energy":{"consumption":{"wattHours":140118},"feedIn":{"wattHours":0}},"id":{"id":"11f82b93-d80d-442d-a2fc-d148422e3700"},"meter":{"meterId":{"value":"1KFM0200001600"},"systemTitle":{"data":"4b464d1020000640"}},"owner":{"id":"59c3d063-d6d8-4d07-b1f5-e3a21d884c12"},"power":{"draw":{"watt":0},"feed":{"watt":0}},"readingFrom":"2024-06-13T22:07:55Z","receivedAt":"2024-06-13T20:07:58Z","voltage":{"L1":{"deciVolt":2369},"L2":{"deciVolt":0},"L3":{"deciVolt":0}}}
+{"current":{"L1":{"centiAmpere":0},"L2":{"centiAmpere":0},"L3":{"centiAmpere":0}},"device":{"deviceId":{"value":"ECUC012A3101E2.cuculus.net"}},"energy":{"consumption":{"wattHours":140118},"feedIn":{"wattHours":0}},"id":{"id":"11f82b93-d80d-442d-a2fc-d148422e3700"},"meter":{"meterId":{"value":"1KFM0200001600"},"systemTitle":{"data":"4b464d1020000640"}},"owner":{"id":"59c3d063-d6d8-4d07-b1f5-e3a21d884c12"},"power":{"draw":{"watt":0},"feed":{"watt":0}},"readingFrom":"2024-06-13T22:07:55Z","receivedAt":"2024-06-13T20:07:58Z","voltage":{"L1":{"deciVolt":2369},"L2":{"deciVolt":0},"L3":{"deciVolt":0}}}
 {"device":{"deviceId":{"value":"ECUC012A3101E2.cuculus.net"}},"energy":{"consumption":{"wattHours":140118},"feedIn":{"wattHours":0}},"id":{"id":"11f82b93-d80d-442d-a2fc-d148422e3700"},"meter":{"meterId":{"value":"1KFM0200001600"},"systemTitle":{"data":"4b464d1020000640"}},"owner":{"id":"59c3d063-d6d8-4d07-b1f5-e3a21d884c12"},"power":{"draw":{"watt":0},"feed":{"watt":0}},"readingFrom":"2024-06-13T22:07:55Z","receivedAt":"2024-06-13T20:07:58Z","voltage":{"L1":{"deciVolt":2369},"L2":{"deciVolt":0},"L3":{"deciVolt":0}}}
 
 
@@ -157,7 +155,7 @@ kafka-console-producer \
       - |
         #
         echo "Installing connector plugins"
-        confluent-hub install --no-prompt confluentinc/kafka-connect-latest
+        confluent-hub install --no-prompt confluentinc/kafka-connect-s3:latest
         #
         echo "Launching Kafka Connect worker"
         /etc/confluent/docker/run & 
@@ -171,7 +169,6 @@ kafka-console-producer \
           fi
           sleep 5 
         done
-        echo -e "\n--\n+> Creating connector"
         curl -X PUT \
         -H 'Content-Type: application/json' \
         -H 'Accept: application/json' http://localhost:8083/connectors/S3SinkConnector/config \
@@ -183,15 +180,15 @@ kafka-console-producer \
         "flush.size": "150",
         "schema.compatibility": "NONE",
         "tasks.max": "1",
-        "topics": "test",
+        "topics": "smartMeter-incoming",
         "store.url": "http://minio-0:9301",
         "key.converter.schemas.enable": "false",
         "key.converter": "org.apache.kafka.connect.storage.StringConverter",
         "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
         "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
         "value.converter.schemas.enable": "false",
-        "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-        "schemas.enable": "false"
+        "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
+        "value.converter.schema.registry.url": "http://karapace-registry:8085"
         }'
         sleep infinity
 
