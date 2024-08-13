@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: connect
+  name: connect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: connect
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: connect
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - "#\necho \"Installing connector plugins\"\nconfluent-hub install --no-prompt confluentinc/kafka-connect-s3:latest\n#\necho \"Launching Kafka Connect worker\"\n/etc/confluent/docker/run & \n#\necho \"Waiting for Kafka Connect to start listening on localhost ⏳\"\nwhile : ; do\n  curl_status=$()(curl -s -o /dev/null -w %{http_code} http://localhost:8083/connectors)\n  echo -e $()(date) \" Kafka Connect listener HTTP state: \" $(curl)_status \" (waiting for 200)\"\n  if [ $(curl)_status -eq 200 ] ; then\n    break\n  fi\n  sleep 5 \ndone\ncurl -X PUT \\\n-H 'Content-Type: application/json' \\\n-H 'Accept: application/json' http://localhost:8083/connectors/S3SinkConnector/config \\\n-d '{\n\"connector.class\": \"io.confluent.connect.s3.S3SinkConnector\",\n\"storage.class\": \"io.confluent.connect.s3.storage.S3Storage\",\n\"s3.region\": \"eu-west-1\",\n\"s3.bucket.name\": \"\",\n\"flush.size\": \"150\",\n\"schema.compatibility\": \"NONE\",\n\"tasks.max\": \"10\",\n\"topics.dir\": \"live\",\n\"topics\": \"smartMeter-incoming\",\n\"store.url\": \"http://minio-0:9301\",\n\"format.class\": \"io.confluent.connect.s3.format.parquet.ParquetFormat\",\n\"schema.generator.class\": \"io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator\",\n\"partitioner.class\": \"io.confluent.connect.storage.partitioner.DailyPartitioner\",\n\"partition.duration.ms\": \"86400000\",\n\"timestamp.extractor\" : \"RecordField\",\n\"timestamp.field\": \"readingFrom\",\n\"timezone\": \"UTC\",\n\"locale\": \"de-DE\"\n}'\nsleep infinity"
+          env:
+            - name: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+            - name: CONNECT_BOOTSTRAP_SERVERS
+              value: redpanda-0:19092
+            - name: CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: CONNECT_CONFIG_STORAGE_TOPIC
+              value: ' _kafka-connect-configs'
+            - name: CONNECT_GROUP_ID
+              value: ' connect-cluster-group'
+            - name: CONNECT_INTERNAL_KEY_CONVERTER
+              value: org.apache.kafka.connect.json.JsonConverter
+            - name: CONNECT_INTERNAL_VALUE_CONVERTER
+              value: org.apache.kafka.connect.json.JsonConverter
+            - name: CONNECT_KEY_CONVERTER
+              value: org.apache.kafka.connect.storage.StringConverter
+            - name: CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL
+              value: http://karapace-registry:8085
+            - name: CONNECT_LOG4J_LOGGERS
+              value: org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR
+            - name: CONNECT_LOG4J_ROOT_LOGLEVEL
+              value: INFO
+            - name: CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: CONNECT_OFFSET_STORAGE_TOPIC
+              value: ' _kafka-connect-offsets'
+            - name: CONNECT_PLUGIN_PATH
+              value: /usr/share/java,/usr/share/confluent-hub-components/,/connectors/
+            - name: CONNECT_REST_ADVERTISED_HOST_NAME
+              value: connect
+            - name: CONNECT_REST_PORT
+              value: ' 8083'
+            - name: CONNECT_STATUS_STORAGE_REPLICATION_FACTOR
+              value: "1"
+            - name: CONNECT_STATUS_STORAGE_TOPIC
+              value: ' _kafka-connect-status'
+            - name: CONNECT_VALUE_CONVERTER
+              value: io.confluent.connect.json.JsonSchemaConverter
+            - name: CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL
+              value: http://karapace-registry:8085
+            - name: KAFKA_HEAP_OPTS
+              value: -Xms256M -Xmx16G
+          image: confluentinc/cp-kafka-connect-base:latest
+          name: connect
+          ports:
+            - containerPort: 8083
+              protocol: TCP
+      hostname: connect
+      restartPolicy: Always

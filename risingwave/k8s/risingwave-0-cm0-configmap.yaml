@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  risingwave.toml: |
+    # RisingWave config file to be mounted into the Docker containers.
+    # See src/config/example.toml for example
+kind: ConfigMap
+metadata:
+  annotations:
+    use-subpath: "true"
+  labels:
+    io.kompose.service: risingwave-0
+  name: risingwave-0-cm0

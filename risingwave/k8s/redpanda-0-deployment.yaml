@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: redpanda-0
+  name: redpanda-0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: redpanda-0
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: redpanda-0
+    spec:
+      containers:
+        - args:
+            - redpanda
+            - start
+            - --smp
+            - "1"
+            - --reserve-memory
+            - 0M
+            - --memory
+            - 4G
+            - --overprovisioned
+            - --node-id
+            - "0"
+            - --check=false
+            - --kafka-addr
+            - PLAINTEXT://0.0.0.0:19092,OUTSIDE://0.0.0.0:9092
+            - --advertise-kafka-addr
+            - PLAINTEXT://redpanda-0:19092,OUTSIDE://localhost:9092
+            - --default-log-level=info
+            - --pandaproxy-addr internal://0.0.0.0:8082,external://0.0.0.0:18082
+            - --advertise-pandaproxy-addr internal://redpanda-0:8082,external://localhost:18082
+            - --schema-registry-addr internal://0.0.0.0:8081,external://0.0.0.0:18081
+            - --rpc-addr redpanda-0:33145
+            - --advertise-rpc-addr redpanda-0:33145
+            - --mode dev-container
+          image: docker.vectorized.io/vectorized/redpanda:latest
+          livenessProbe:
+            exec:
+              command:
+                - curl -f localhost:9644/v1/status/ready
+            failureThreshold: 5
+            periodSeconds: 1
+            timeoutSeconds: 5
+          name: redpanda-0
+          ports:
+            - containerPort: 19092
+              protocol: TCP
+            - containerPort: 9092
+              protocol: TCP
+            - containerPort: 9644
+              protocol: TCP
+            - containerPort: 18081
+              protocol: TCP
+            - containerPort: 18082
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /var/lib/redpanda/data
+              name: redpanda-0
+      restartPolicy: Always
+      volumes:
+        - name: redpanda-0
+          persistentVolumeClaim:
+            claimName: redpanda-0

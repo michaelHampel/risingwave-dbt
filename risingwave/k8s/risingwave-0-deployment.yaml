@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: risingwave-0
+  name: risingwave-0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: risingwave-0
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: risingwave-0
+    spec:
+      containers:
+        - args:
+            - standalone
+            - --meta-opts= --listen-addr 0.0.0.0:5690 --advertise-addr 0.0.0.0:5690 --dashboard-host 0.0.0.0:5691 --prometheus-host 0.0.0.0:1250 --prometheus-endpoint http://prometheus-0:9500 --backend sql --sql-endpoint postgres://postgres:@postgres-0:5432/metadata --state-store hummock+minio://:@minio-0:9301/ --data-directory  --config-path /risingwave.toml
+            - '--compute-opts= --config-path /risingwave.toml --listen-addr 0.0.0.0:5688 --prometheus-listener-addr 0.0.0.0:1250 --advertise-addr 0.0.0.0:5688 --async-stack-trace verbose #--parallelism 4 #--total-memory-bytes 8589934592 --role both --meta-address http://0.0.0.0:5690'
+            - --frontend-opts= --config-path /risingwave.toml --listen-addr 0.0.0.0:4566 --advertise-addr 0.0.0.0:4566 --prometheus-listener-addr 0.0.0.0:1250 --health-check-listener-addr 0.0.0.0:6786 --meta-addr http://0.0.0.0:5690
+            - --compactor-opts= --listen-addr 0.0.0.0:6660 --prometheus-listener-addr 0.0.0.0:1250 --advertise-addr 0.0.0.0:6660 --meta-address http://0.0.0.0:5690
+          env:
+            - name: ENABLE_TELEMETRY
+              value: "true"
+            - name: RUST_BACKTRACE
+              value: "1"
+          image: risingwavelabs/risingwave:v1.10.0
+          livenessProbe:
+            exec:
+              command:
+                - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/6660; exit $?;'
+                - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5688; exit $?;'
+                - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/4566; exit $?;'
+                - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/5690; exit $?;'
+            periodSeconds: 1
+            timeoutSeconds: 5
+          name: risingwave-0
+          ports:
+            - containerPort: 4566
+              protocol: TCP
+            - containerPort: 5690
+              protocol: TCP
+            - containerPort: 5691
+              protocol: TCP
+            - containerPort: 1250
+              protocol: TCP
+            - containerPort: 6660
+              protocol: TCP
+            - containerPort: 5688
+              protocol: TCP
+          resources:
+            limits:
+              memory: "30064771072"
+            requests:
+              memory: "30064771072"
+          volumeMounts:
+            - mountPath: /risingwave.toml
+              name: risingwave-0-cm0
+              subPath: risingwave.toml
+      restartPolicy: Always
+      volumes:
+        - configMap:
+            items:
+              - key: risingwave.toml
+                path: risingwave.toml
+            name: risingwave-0-cm0
+          name: risingwave-0-cm0

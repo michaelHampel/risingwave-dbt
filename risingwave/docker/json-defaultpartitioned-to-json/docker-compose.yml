@@ -30,6 +30,7 @@ services:
       - CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR=1
       - CONNECT_STATUS_STORAGE_REPLICATION_FACTOR=1
       - CONNECT_PLUGIN_PATH=/usr/share/java,/usr/share/confluent-hub-components/,/connectors/
+      - KAFKA_HEAP_OPTS=-Xms256M -Xmx16G
 
       - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
       - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
@@ -63,12 +64,17 @@ services:
         "s3.bucket.name": "${MINIO_ENOX_BUCKET}",
         "flush.size": "150",
         "schema.compatibility": "NONE",
-        "tasks.max": "1",
+        "tasks.max": "10",
         "topics.dir": "live",
         "topics": "smartMeter-incoming",
         "store.url": "http://minio-0:9301",
-        "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+        "format.class": "io.confluent.connect.s3.format.parquet.ParquetFormat",
         "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
-        "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner"
+        "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
+        "partition.duration.ms": "86400000",
+        "timestamp.extractor" : "RecordField",
+        "timestamp.field": "readingFrom",
+        "timezone": "UTC",
+        "locale": "de-DE"
         }'
         sleep infinity

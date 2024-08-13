@@ -1,3 +1,6 @@
+-- Create a CDC Postgres source
+-- Source can then get referenced and used to create a RW table
+
 {{ config(materialized='source') }}
 CREATE SOURCE IF NOT EXISTS {{ this }}
 WITH (

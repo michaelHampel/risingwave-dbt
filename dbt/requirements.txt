@@ -14,3 +14,4 @@ ipykernel
 faker
 boto3
 sentry-sdk
+duckdb

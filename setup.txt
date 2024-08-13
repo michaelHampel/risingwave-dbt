@@ -192,4 +192,88 @@ kafka-console-producer \
         }'
         sleep infinity
 
+"path.format" : "'\'year\''=YYYY/'\'month\''=MM/'\'day\''=dd/'\'hour\''=HH",
+"partition.duration.ms": "600000",
+"rotate.schedule.interval.ms": "600000",
 
+INFO S3SinkConnectorConfig values: 
+2024-08-12 15:02:03     allow.optional.map.keys = false
+2024-08-12 15:02:03     avro.codec = null
+2024-08-12 15:02:03     aws.access.key.id = 
+2024-08-12 15:02:03     aws.secret.access.key = [hidden]
+2024-08-12 15:02:03     behavior.on.null.values = fail
+2024-08-12 15:02:03     connect.meta.data = true
+2024-08-12 15:02:03     enhanced.avro.schema.support = true
+2024-08-12 15:02:03     filename.offset.zero.pad.width = 10
+2024-08-12 15:02:03     flush.size = 150
+2024-08-12 15:02:03     format.bytearray.extension = .bin
+2024-08-12 15:02:03     format.bytearray.separator = null
+2024-08-12 15:02:03     format.class = class io.confluent.connect.s3.format.parquet.ParquetFormat
+2024-08-12 15:02:03     headers.format.class = class io.confluent.connect.s3.format.avro.AvroFormat
+2024-08-12 15:02:03     json.decimal.format = BASE64
+2024-08-12 15:02:03     keys.format.class = class io.confluent.connect.s3.format.avro.AvroFormat
+2024-08-12 15:02:03     parquet.codec = snappy
+2024-08-12 15:02:03     retry.backoff.ms = 5000
+2024-08-12 15:02:03     rotate.interval.ms = -1
+2024-08-12 15:02:03     rotate.schedule.interval.ms = -1
+2024-08-12 15:02:03     s3.acl.canned = null
+2024-08-12 15:02:03     s3.bucket.name = enox
+2024-08-12 15:02:03     s3.compression.level = -1
+2024-08-12 15:02:03     s3.compression.type = none
+2024-08-12 15:02:03     s3.credentials.provider.class = class com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+2024-08-12 15:02:03     s3.elastic.buffer.enable = false
+2024-08-12 15:02:03     s3.elastic.buffer.init.capacity = 131072
+2024-08-12 15:02:03     s3.http.send.expect.continue = true
+2024-08-12 15:02:03     s3.object.behavior.on.tagging.error = ignore
+2024-08-12 15:02:03     s3.object.tagging = false
+2024-08-12 15:02:03     s3.part.retries = 3
+2024-08-12 15:02:03     s3.part.size = 26214400
+2024-08-12 15:02:03     s3.path.style.access.enabled = true
+2024-08-12 15:02:03     s3.proxy.password = [hidden]
+2024-08-12 15:02:03     s3.proxy.url = 
+2024-08-12 15:02:03     s3.proxy.user = null
+2024-08-12 15:02:03     s3.region = eu-west-1
+2024-08-12 15:02:03     s3.retry.backoff.ms = 200
+2024-08-12 15:02:03     s3.schema.partition.affix.type = NONE
+2024-08-12 15:02:03     s3.sse.customer.key = [hidden]
+2024-08-12 15:02:03     s3.sse.kms.key.id = 
+2024-08-12 15:02:03     s3.ssea.name = 
+2024-08-12 15:02:03     s3.wan.mode = false
+2024-08-12 15:02:03     schema.compatibility = NONE
+2024-08-12 15:02:03     schemas.cache.config = 1000
+2024-08-12 15:02:03     shutdown.timeout.ms = 3000
+2024-08-12 15:02:03     store.kafka.headers = false
+2024-08-12 15:02:03     store.kafka.keys = false
+2024-08-12 15:02:03     tombstone.encoded.partition = tombstone
+2024-08-12 15:02:03  (io.confluent.connect.s3.S3SinkConnectorConfig)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,651] INFO StorageCommonConfig values: 
+2024-08-12 15:02:03     directory.delim = /
+2024-08-12 15:02:03     file.delim = +
+2024-08-12 15:02:03     storage.class = class io.confluent.connect.s3.storage.S3Storage
+2024-08-12 15:02:03     store.url = http://minio-0:9301
+2024-08-12 15:02:03     topics.dir = live
+2024-08-12 15:02:03  (io.confluent.connect.storage.common.StorageCommonConfig)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,651] INFO PartitionerConfig values: 
+2024-08-12 15:02:03     locale = de-DE
+2024-08-12 15:02:03     partition.duration.ms = -1
+2024-08-12 15:02:03     partition.field.name = []
+2024-08-12 15:02:03     partitioner.class = class io.confluent.connect.storage.partitioner.DailyPartitioner
+2024-08-12 15:02:03     path.format = 
+2024-08-12 15:02:03     timestamp.extractor = RecordField
+2024-08-12 15:02:03     timestamp.field = readingFrom
+2024-08-12 15:02:03     timezone = UTC
+2024-08-12 15:02:03  (io.confluent.connect.storage.partitioner.PartitionerConfig)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,652] INFO Creating S3 client. (io.confluent.connect.s3.storage.S3Storage)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,675] INFO Created a retry policy for the connector (io.confluent.connect.s3.storage.S3Storage)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,678] INFO Returning new credentials provider based on the configured credentials provider class (io.confluent.connect.s3.storage.S3Storage)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,678] INFO S3 client created (io.confluent.connect.s3.storage.S3Storage)
+2024-08-12 15:02:03 [2024-08-12 13:02:03,824] INFO AvroDataConfig values: 
+2024-08-12 15:02:03     allow.optional.map.keys = false
+2024-08-12 15:02:03     connect.meta.data = true
+2024-08-12 15:02:03     discard.type.doc.default = false
+2024-08-12 15:02:03     enhanced.avro.schema.support = true
+2024-08-12 15:02:03     flatten.singleton.unions = true
+2024-08-12 15:02:03     generalized.sum.type.support = false
+2024-08-12 15:02:03     ignore.default.for.nullables = false
+2024-08-12 15:02:03     schemas.cache.config = 1000
+2024-08-12 15:02:03     scrub.invalid.names = false

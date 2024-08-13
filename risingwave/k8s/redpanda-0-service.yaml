@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose -f docker-compose.yml -f json-defaultpartitioned-to-json/docker-compose.yml convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: redpanda-0
+  name: redpanda-0
+spec:
+  ports:
+    - name: "19092"
+      port: 19092
+      targetPort: 19092
+    - name: "9092"
+      port: 9092
+      targetPort: 9092
+    - name: "9644"
+      port: 9644
+      targetPort: 9644
+    - name: "18081"
+      port: 18081
+      targetPort: 18081
+    - name: "18082"
+      port: 18082
+      targetPort: 18082
+    - name: 19092-tcp
+      port: 19092
+      targetPort: 19092
+    - name: 9092-tcp
+      port: 9092
+      targetPort: 9092
+    - name: 9644-tcp
+      port: 9644
+      targetPort: 9644
+  selector:
+    io.kompose.service: redpanda-0

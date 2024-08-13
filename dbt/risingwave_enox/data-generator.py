@@ -1,6 +1,6 @@
 import random
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import logging
 import psycopg2
@@ -114,7 +114,9 @@ def download_latest_schema(schema_registry_client, subject):
 def next_message(fake):
     owner_id, device_id, smartMeter_mac = fake.user_info()
     logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}, smartMeter_mac: {smartMeter_mac}")
-    read_time = fake.date_time_between(start_date= '-7d', tzinfo=ZoneInfo('Europe/Vienna'))
+    # read_time = fake.date_time_between(start_date= '-7d', tzinfo=ZoneInfo('Europe/Vienna'))
+    str_format = "%Y-%m-%dT%H:%M:%SZ"
+    read_time = fake.date_time_between(start_date = '-7d', tzinfo = timezone.utc)
     received_time = read_time + timedelta(seconds = random.randint(1,5))
     message = SmartMeterData (
         Current(Measurement(random.randint(0,10)), Measurement(random.randint(0,10)), Measurement(random.randint(0,10))),
@@ -124,8 +126,8 @@ def next_message(fake):
         Meter(Value(fake.pystr_format()), SystemTitle(smartMeter_mac)),
         Owner(owner_id),
         Power(Watt(random.randint(5,50)), Watt(random.randint(2,60))),
-        str(read_time),
-        str(received_time),
+        read_time.strftime(str_format),
+        received_time.strftime(str_format),
         Voltage(DeciVolt(random.randint(100,10000)), DeciVolt(random.randint(200,8000)), DeciVolt(random.randint(300,15000)))
     )
     return message
