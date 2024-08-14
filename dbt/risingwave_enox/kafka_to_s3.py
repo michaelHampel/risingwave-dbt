@@ -9,7 +9,7 @@ import os
 import boto3
 from domain import *
 
-# Credentials and Connection Info
+# Credentils and Connection Info
 access_key = "minioadmin"
 secret_key = "minio123"
 endpoint = "http://localhost:9301"  # MinIO endpoint
