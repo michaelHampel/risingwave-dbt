@@ -180,9 +180,10 @@ services:
       /usr/bin/mc config;
       until (/usr/bin/mc config host add minio http://minio-0:9301 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}) do echo '...waiting...' && sleep 1; 
       done; 
-      /usr/bin/mc mb minio/${MINIO_RW_BUCKET}; /usr/bin/mc policy set public minio/${MINIO_RW_BUCKET}; 
-      /usr/bin/mc mb minio/${MINIO_ENOX_BUCKET}; /usr/bin/mc policy set public minio/${MINIO_ENOX_BUCKET}; 
-
+      /usr/bin/mc mb minio/${MINIO_RW_BUCKET} --ignore-existing; /usr/bin/mc policy set public minio/${MINIO_RW_BUCKET}; 
+      /usr/bin/mc mb minio/${MINIO_ENOX_BUCKET} --ignore-existing; /usr/bin/mc policy set public minio/${MINIO_ENOX_BUCKET}; 
+      /usr/bin/mc mb minio/${MINIO_ICEBERG_BUCKET} --ignore-existing; /usr/bin/mc policy set public minio/${MINIO_ICEBERG_BUCKET}; 
+      
       exit 0; 
       "
     depends_on:
@@ -357,6 +358,42 @@ services:
       KARAPACE_REGISTRY_PORT: 8085
       KARAPACE_ADMIN_METADATA_MAX_AGE: 0
       KARAPACE_LOG_LEVEL: WARNING
+
+  nessie:
+    image: ghcr.io/projectnessie/nessie:0.95.0
+    container_name: nessie
+    networks:
+      - redpanda_network
+    ports:
+      # API port
+      - "19120:19120"
+      # Management port (metrics and health checks)
+      - "9000:9000"
+    depends_on:
+      minio-0:
+        condition: service_healthy
+    environment:
+      # Version store settings.
+      # This example uses ephemeral storage, data is lost during reset.
+      - nessie.version.store.type=IN_MEMORY
+      # Object store settings.
+      # This example uses MinIO as the object store.
+      - nessie.catalog.default-warehouse=warehouse
+      - nessie.catalog.warehouses.warehouse.location=s3://${MINIO_ICEBERG_BUCKET}/
+      - nessie.catalog.service.s3.default-options.region=europe-west-1
+      - nessie.catalog.service.s3.default-options.path-style-access=true
+      - nessie.catalog.service.s3.default-options.access-key.name=${MINIO_ACCESS_KEY}
+      - nessie.catalog.service.s3.default-options.access-key.secret=${MINIO_SECRET_KEY}
+      # MinIO endpoint for Nessie server
+      - nessie.catalog.service.s3.default-options.endpoint=http://minio-0:9301/
+      # MinIO endpoint for clients (on the Podman/Docker host)
+      - nessie.catalog.service.s3.default-options.external-endpoint=http://127.0.0.1:9400/
+    healthcheck:
+      test: "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /q/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"
+      interval: 5s
+      timeout: 2s
+      retries: 15
+
 
   otel-collector:
     image: otel/opentelemetry-collector

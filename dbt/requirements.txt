@@ -15,3 +15,7 @@ faker
 boto3
 sentry-sdk
 duckdb
+numpy
+ruptures
+matplotlib
+pyiceberg[duckdb]

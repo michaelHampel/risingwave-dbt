@@ -14,8 +14,9 @@ kafka-topics --bootstrap-server localhost:9092 --describe --topic rw-test
 cd dbt
 python -m venv .venv
 source .venv/bin/activate
-
 pip install -r requirements.txt
+
+cd risingwave
 
 // dbt project init
 # create dbt project for risisingwave (running in docker)
@@ -147,6 +148,16 @@ kafka-console-producer \
   --property value.schema.id=3
 
  value.schema="$(curl http://localhost:8081/schemas/ids/419 | jq -r .schema)"
+
+ conn.execute(f"""COPY ( 
+                        SELECT owner, device, energy, readingFrom
+                        FROM read_parquet('s3://{bucket_name}/{live_prefix}/**/*.parquet', filename = true) 
+                        WHERE year = {year}
+                        AND month = {month} 
+                        AND day = {day}
+                        AND owner.id = '{owner_id}'
+                        ORDER BY readingFrom ASC
+                    ) TO 's3://{bucket_name}/results-snappy.parquet' (FORMAT 'parquet');""")
 
 
   command: 

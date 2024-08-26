@@ -62,7 +62,7 @@ services:
         "storage.class": "io.confluent.connect.s3.storage.S3Storage",
         "s3.region": "eu-west-1",
         "s3.bucket.name": "${MINIO_ENOX_BUCKET}",
-        "flush.size": "150",
+        "flush.size": "5000",
         "schema.compatibility": "NONE",
         "tasks.max": "10",
         "topics.dir": "live",

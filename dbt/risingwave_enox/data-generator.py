@@ -111,17 +111,17 @@ def download_latest_schema(schema_registry_client, subject):
   print(registered_schema.schema.schema_str)
   return registered_schema.schema.schema_str
 
-def next_message(fake):
+def next_message(read_time):
     owner_id, device_id, smartMeter_mac = fake.user_info()
     logging.info(f"Random owner_info: owner_id: {owner_id}, device_id: {device_id}, smartMeter_mac: {smartMeter_mac}")
     # read_time = fake.date_time_between(start_date= '-7d', tzinfo=ZoneInfo('Europe/Vienna'))
     str_format = "%Y-%m-%dT%H:%M:%SZ"
-    read_time = fake.date_time_between(start_date = '-7d', tzinfo = timezone.utc)
+    #read_time = fake.date_time_between(start_date = '-9d', tzinfo = timezone.utc)
     received_time = read_time + timedelta(seconds = random.randint(1,5))
     message = SmartMeterData (
         Current(Measurement(random.randint(0,10)), Measurement(random.randint(0,10)), Measurement(random.randint(0,10))),
         Device(Value(device_id)),
-        Energy(Reading(random.randint(2, 30)), Reading(random.randint(0, 40))),
+        Energy(Reading(random.randint(2, 10000)), Reading(random.randint(0, 4000))),
         Id(fake.pystr_format()),
         Meter(Value(fake.pystr_format()), SystemTitle(smartMeter_mac)),
         Owner(owner_id),
@@ -168,6 +168,13 @@ if __name__ == "__main__":
     fake = Faker()
     fake.add_provider(user_info_provider)
 
+    it = fake.time_series(start_date='-3d',
+                 end_date='now',
+                 precision=5.0,
+                 tzinfo=timezone.utc)
+
+#print(next(it)[0].strftime(str_format))
+
     try:
     # Produce messages to the Kafka topic
         if is_broker_available():
@@ -181,7 +188,7 @@ if __name__ == "__main__":
             else:
                 json_serializer = JSONSerializer(schema, schema_registry_client, smartMeterData_to_dict)
                 while nr < 20000:
-                    send_message(producer, topic, next_message(fake))
+                    send_message(producer, topic, next_message(next(it)[0]))
                     producer.poll(0)  # Flush outstanding deliveries
 
                     time.sleep(1/rate_per_second)
