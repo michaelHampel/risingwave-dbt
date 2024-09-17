@@ -105,33 +105,6 @@ services:
       retries: 5
     restart: always
 
-  grafana-0:
-    image: "grafana/grafana-oss:latest"
-    command: []
-    networks:
-      - redpanda_network
-    expose:
-      - "3001"
-    ports:
-      - "3001:3001"
-    depends_on: []
-    volumes:
-      - "grafana-0:/var/lib/grafana"
-      - "./grafana.ini:/etc/grafana/grafana.ini"
-      - "./grafana-risedev-datasource.yml:/etc/grafana/provisioning/datasources/grafana-risedev-datasource.yml"
-      - "./grafana-risedev-dashboard.yml:/etc/grafana/provisioning/dashboards/grafana-risedev-dashboard.yml"
-      - "./dashboards:/dashboards"
-    environment: {}
-    container_name: grafana-0
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - bash -c 'printf \"GET / HTTP/1.1\n\n\" > /dev/tcp/127.0.0.1/3001; exit $$?;'
-      interval: 1s
-      timeout: 5s
-      retries: 5
-    restart: always
-
   minio-0:
     image: "quay.io/minio/minio:latest"
     command:
@@ -189,38 +162,6 @@ services:
     depends_on:
       - minio-0
 
-  prometheus-0:
-    image: "prom/prometheus:latest"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
-      - "--web.console.templates=/usr/share/prometheus/consoles"
-      - "--web.listen-address=0.0.0.0:9500"
-      - "--storage.tsdb.retention.time=30d"
-    expose:
-      - "9500"
-    ports:
-      - "9500:9500"
-    depends_on: []
-    networks:
-      - redpanda_network
-    volumes:
-      - "prometheus-0:/prometheus"
-      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
-    environment: {}
-    container_name: prometheus-0
-    labels:
-      org.label-schema.group: "monitoring"
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - sh -c 'printf "GET /-/healthy HTTP/1.0\n\n" | nc localhost 9500; exit $$?;'
-      interval: 1s
-      timeout: 5s
-      retries: 5
-    restart: always
-
   redpanda-0:
     image: docker.vectorized.io/vectorized/redpanda:latest
     command:
@@ -274,6 +215,34 @@ services:
       retries: 5
     restart: always
 
+  karapace-registry:
+    image: ghcr.io/aiven-open/karapace:develop
+    container_name: karapace-registry
+    build:
+      context: ..
+      dockerfile: container/Dockerfile
+    networks:
+      - redpanda_network
+    entrypoint:
+      - /bin/bash
+      - /opt/karapace/start.sh
+      - registry
+    depends_on:
+      - redpanda-0
+    ports:
+      - "8085:8085"
+    environment:
+      KARAPACE_ADVERTISED_HOSTNAME: karapace-registry
+      KARAPACE_BOOTSTRAP_URI: redpanda-0:19092
+      KARAPACE_PORT: 8085
+      KARAPACE_HOST: 0.0.0.0
+      KARAPACE_CLIENT_ID: karapace
+      KARAPACE_GROUP_ID: karapace-registry
+      KARAPACE_MASTER_ELIGIBILITY: "true"
+      KARAPACE_TOPIC_NAME: _schemas
+      KARAPACE_LOG_LEVEL: WARNING
+      KARAPACE_COMPATIBILITY: FULL
+
   redpanda-console:
     container_name: redpanda-console
     image: docker.redpanda.com/redpandadata/console:v2.6.0
@@ -303,34 +272,6 @@ services:
     depends_on:
       - redpanda-0
       - karapace-registry
-
-  karapace-registry:
-    image: ghcr.io/aiven-open/karapace:develop
-    container_name: karapace-registry
-    build:
-      context: ..
-      dockerfile: container/Dockerfile
-    networks:
-      - redpanda_network
-    entrypoint:
-      - /bin/bash
-      - /opt/karapace/start.sh
-      - registry
-    depends_on:
-      - redpanda-0
-    ports:
-      - "8085:8085"
-    environment:
-      KARAPACE_ADVERTISED_HOSTNAME: karapace-registry
-      KARAPACE_BOOTSTRAP_URI: redpanda-0:19092
-      KARAPACE_PORT: 8085
-      KARAPACE_HOST: 0.0.0.0
-      KARAPACE_CLIENT_ID: karapace
-      KARAPACE_GROUP_ID: karapace-registry
-      KARAPACE_MASTER_ELIGIBILITY: "true"
-      KARAPACE_TOPIC_NAME: _schemas
-      KARAPACE_LOG_LEVEL: WARNING
-      KARAPACE_COMPATIBILITY: FULL
 
   karapace-rest:
     image: ghcr.io/aiven-open/karapace:develop
@@ -387,37 +328,25 @@ services:
       # MinIO endpoint for Nessie server
       - nessie.catalog.service.s3.default-options.endpoint=http://minio-0:9301/
       # MinIO endpoint for clients (on the Podman/Docker host)
-      - nessie.catalog.service.s3.default-options.external-endpoint=http://127.0.0.1:9400/
+      - nessie.catalog.service.s3.default-options.external-endpoint=http://127.0.0.1:9301/
     healthcheck:
       test: "exec 3<>/dev/tcp/localhost/9000 && echo -e 'GET /q/health HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200 OK'"
       interval: 5s
       timeout: 2s
       retries: 15
-
-
-  otel-collector:
-    image: otel/opentelemetry-collector
-    command: ["--config=/etc/otel-collector-config.yml"]
-    volumes:
-      - ./otel-collector-config.yml:/etc/otel-collector-config.yml
-    container_name: otel-collector
-    networks:
-      - redpanda_network
-    expose:
-      # - 8888
-      - 8889
-    ports:
-      - "1888:1888"   # pprof extension
-      - "8888:8888"   # Prometheus metrics exposed by the collector
-      - "8889:8889"   # Prometheus exporter metrics
-      - "13133:13133" # health_check extension
-      - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP http receiver
-      - "55679:55679" # zpages extension
-
   
   
-  # redpanda-topics:
+
+volumes:
+  postgres-0:
+    external: false
+  minio-0:
+    external: false
+  redpanda-0:
+    external: false
+
+
+# redpanda-topics:
     # image: docker.vectorized.io/vectorized/redpanda:latest
     # depends_on:
       # - redpanda-0
@@ -437,15 +366,3 @@ services:
       # "
     # networks:
       # - redpanda_network 
-
-volumes:
-  postgres-0:
-    external: false
-  grafana-0:
-    external: false
-  minio-0:
-    external: false
-  prometheus-0:
-    external: false
-  redpanda-0:
-    external: false
