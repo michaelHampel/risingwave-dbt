@@ -156,7 +156,7 @@ def send_message(producer, topic, message):
 if __name__ == "__main__":
 
     nr = 0
-    rate_per_second = 250
+    rate_per_second = 50
 
     ps_conn = postgres_connect()
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     fake = Faker()
     fake.add_provider(user_info_provider)
 
-    time_it = fake.time_series(start_date='-15d',
+    time_it = fake.time_series(start_date='-3d',
                  end_date='now',
                  precision=5.0,
                  tzinfo=timezone.utc)
@@ -187,7 +187,7 @@ if __name__ == "__main__":
                 print(f"Error: No schema found for subject {schema_subject}!!")
             else:
                 json_serializer = JSONSerializer(schema, schema_registry_client, smartMeterData_to_dict)
-                while nr < 200000:
+                while nr < 20000:
                     send_message(producer, topic, next_message(next(time_it)[0]))
                     producer.poll(0)  # Flush outstanding deliveries
 

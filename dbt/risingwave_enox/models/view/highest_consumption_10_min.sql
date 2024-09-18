@@ -6,7 +6,7 @@ SELECT
 FROM
   {{ ref('smartmeter_data_with_user_info')}} 
 WHERE
-  read_ts > (NOW() - INTERVAL '10' MINUTE)
+  read_ts > (NOW() - INTERVAL '1' MINUTE)
 GROUP BY
   device_id, owner_id
 ORDER BY 

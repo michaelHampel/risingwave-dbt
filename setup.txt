@@ -288,3 +288,34 @@ INFO S3SinkConnectorConfig values:
 2024-08-12 15:02:03     ignore.default.for.nullables = false
 2024-08-12 15:02:03     schemas.cache.config = 1000
 2024-08-12 15:02:03     scrub.invalid.names = false
+
+
+Calculate the average temperature and humidity for each device in a time window
+
+CREATE MATERIALIZED VIEW device_avg_mv AS
+SELECT device_id, 
+AVG(temperature) AS avg_temperature,
+AVG(humidity) AS avg_humidity,
+window_start, window_end
+FROM TUMBLE (iot_sensor_data, ts, INTERVAL '1 MINUTES')
+GROUP BY device_id,window_start, window_end;
+Counts device status as either Normal or Abnormal within a time window
+
+CREATE MATERIALIZED VIEW device_status_count_mv AS
+SELECT  device_id,
+COUNT(CASE WHEN device_status = 'normal' THEN 1 ELSE NULL END) AS normal_count,
+COUNT(CASE WHEN device_status = 'abnormal' THEN 1 ELSE NULL END) AS abnormal_count, 
+window_start, window_end
+FROM TUMBLE (iot_sensor_data, ts, INTERVAL '1 MINUTES')
+GROUP BY device_id, window_start, window_end;
+Calculate the max and min temperature and humidity for each device in a time window
+
+CREATE MATERIALIZED VIEW device_max_min_mv AS
+SELECT device_id, 
+MAX(temperature) AS max_temperature,
+MAX(humidity) AS max_humidity,
+MIN(temperature) AS min_temperature,
+MIN(humidity) AS min_humidity,
+window_start, window_end
+FROM TUMBLE (iot_sensor_data, ts, INTERVAL '1 MINUTES')
+GROUP BY device_id,window_start, window_end;
